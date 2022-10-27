@@ -12,7 +12,7 @@ Well, I had enough. I wanted an app that could easily take a
 folder filled with images, and spit out a clean, easy to use
 webpage that can run on any device.
 
-Easily zoom in with the hidden settings on the top right
+Easily zoom in with the hidden settings on the top left
 corner, and choose between scroll or book layouts.
 
 Not only can you enjoy reading books, but you can share the

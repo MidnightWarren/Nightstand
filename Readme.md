@@ -1,8 +1,5 @@
 # NIGHTSTAND
-## A Minimalist Reader for Scanned Books
-
-### Written by Christopher Warren
-### midnightauthor.com
+### A Minimalist Reader for Scanned Books (And More)
 
 ## About
 

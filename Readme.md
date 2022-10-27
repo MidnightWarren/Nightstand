@@ -111,3 +111,14 @@ many pages you're compiling, the resulting webpage may be
 slow to load. I recommend making sure your images are scaled
 and compressed to a reasonable size for a smoother
 experience.
+
+
+## Features for Future Versions
+
+- Click and drag to scroll over images (mobile and desktop)
+- Custom background images(?)
+- Presentation mode (flip through pages one or two at a time)
+- Adjust page brightness and contrast
+- Page grid view
+- Library browser (multi-book support and browsing between books)
+- Support for markdown/html eBooks

@@ -1,0 +1,203 @@
+#!/bin/bash
+
+# Nightstand
+# Public Domain -  2022 Christopher Warren
+# midnightauthor.com
+
+# TEXT COLORS
+RED='\033[0;31m'
+GRN='\033[0;32m'
+BLU='\033[0;34m'
+YLW='\033[1;33m'
+PRP='\033[01;35m'
+CYN='\033[01;36m'
+WTE='\033[01;37m'
+BLD='\033[1m'
+UND='\033[4m'
+NO='\033[0m' # No Color
+
+function manual {
+printf "${PRP}Nightstand Help:${NO}\n"
+printf "Usage: nightstand [option]\n"
+printf "${RED}Make sure you're in the right directory before running.${NO}\n"
+printf "    OPTIONS:\n"
+printf "${YLW}nothing${NO}\n"
+printf "${CYN}If you don't enter any option, \nnightstand will take images in the \ncurrent directory and build\na single index.html file.${NO}\n"
+printf "${YLW}bulk${NO}\n"
+printf "${CYN}The bulk option will go into the subdirectories \nof the current folder and build a \nnightstand page in each. This is useful for setting up \na whole library.${NO}\n"
+printf "${YLW}library${NO}\n"
+printf "${CYN}The library option looks in subdirectories \nfor index.html files and thumbnails, and \nbuilds a library webpage so you can browse \nthrough your whole collection.${NO}\n"
+}
+
+title=$(printf '%s\n' "${PWD##*/}")
+
+function pheader {
+cat > index.html<< EOF
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Nightstand - b00k</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--radius:70;--book:block;--size:50%;--sw:#000}body{background-color:var(--sw);color:#fff;user-select:none;-webkit-user-select:none;-moz-user-select:none}.settings{top:0;left:0;position:fixed;background-color:rgba(0,0,0,.8);padding:20px;border-bottom-right-radius:15px;opacity:0;-o-transition:opacity .2s ease-in-out;-ms-transition:opacity .2s ease-in-out;-moz-transition:opacity .2s ease-in-out;-webkit-transition:opacity .2s ease-in-out;transition:opacity .2s ease-in-out}input[type=checkbox]{visibility:hidden;display:none}.settings:hover{opacity:1}.page{display:block;width:var(--size);height:var(--size);margin:0 auto;margin-bottom:1%;pointer-events:none}.bigbox{width:var(--radius);margin:0 auto}.pagecontainer{display:var(--book);flex-wrap:wrap;max-width:100%;margin:0 auto}hr{margin:15}
+</style>
+</head>
+<body>
+<div class="settings">
+  <label for="slider">🔍</label>
+  <input type="range" id="slider" min="1" max="170" value="100" />
+
+  <label for="BookLayout" id="layouticon">📚</label>
+  <input type="checkbox" name="tlayout" id="BookLayout">
+  
+  <input type="color" name="bcol" id="swatcher" value="#000000">
+</div>
+<div class="bigbox">
+EOF
+}
+
+function plist {
+ls -1 | grep '.png\|.jpg\|.jpeg' | while read line; do echo "<img src=\"$line\" class=\"page\"><br />"; done >> index.html
+}
+
+function pfooter {
+cat >> index.html<< EOF
+</div>
+<script type="text/javascript">
+const slider=document.getElementById("slider"),root=document.documentElement;slider.addEventListener("input",(e=>{root.style.setProperty("--radius",e.target.value+"%")}));var checkbox=document.querySelector("input[name=tlayout]");const pg=document.querySelector(":root"),box=document.getElementById("layouticon");let swatcher;checkbox.addEventListener("change",(function(){this.checked?(pg.style.setProperty("--book","flex"),pg.style.setProperty("--size","50%"),box.innerHTML=box.innerHTML.replace("📚","📖")):(pg.style.setProperty("--book","block"),pg.style.setProperty("--size","100%"),box.innerHTML=box.innerHTML.replace("📖","📚"))}));const defaultColor="#000000";function startup(){swatcher=document.querySelector("#swatcher"),swatcher.value="#000000",swatcher.addEventListener("input",updateFirst,!1),swatcher.addEventListener("change",updateAll,!1),swatcher.select()}function updateFirst(e){document.body.style.background=e.target.value}function updateAll(e){document.body.style.background=e.target.value}window.addEventListener("load",startup,!1);
+</script>
+</body>
+</html>
+EOF
+}
+
+function addextra {
+# sed -i "" '
+# /<img src/a\
+# <div class="pagecontainer">\
+# ' index.html
+
+printf '%s\n' '23 insert' '<div class="pagecontainer">' . x | ex index.html
+printf '%s\n' 'set ignorecase' '$+?img src?i' '</div>' . x | ex index.html
+
+sed -i "" "s/b00k/$title/" index.html
+}
+
+function bulk {
+for direcs in */; do
+cd "./$direcs" && nightstand && cd ../
+done
+}
+
+function library {
+count=$(find . -depth 2 -name "index.html" -mmin +2 | wc -l )
+
+cat > index.html<< EOF
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>📚 Library</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+background-color:black;
+color:white;
+}
+
+article {
+width: 80%;
+margin: 0 auto;
+display: block;
+}
+
+.grid-item img {
+  width: 100%;
+}
+
+.montage {
+	column-count: 8;
+	column-gap: 16px;
+}
+
+.montage .grid-item {
+  display: inline-block;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+@media (max-width: 1700px) {
+  .montage {
+    column-count: 6;
+  }
+}
+
+@media (max-width: 1300px) {
+  .montage {
+    column-count: 4;
+  }
+}
+
+@media (max-width: 1000px) {
+  .montage {
+    column-count: 3;
+  }
+}
+
+@media (max-width: 800px) {
+  .montage {
+    column-count: 2;
+  }
+}
+
+@media (max-width: 350px) {
+  .montage {
+    column-count: 1;
+  }
+}
+</style>
+</head>
+<body>
+	
+<div width="100%" style="display:block;margin-top:35px;margin-bottom:60px;">
+<h2 style="text-align:center;">🕯️ The Library 🕯️</h2>
+<h4 style="text-align:center;">· GbnumbG books ·</h4>
+<hr style="border:0;height:1px;background:#ccc;background-image:-webkit-linear-gradient(left,#000,#ccc,#000);background-image:-moz-linear-gradient(left,#000,#ccc,#000);background-image:-ms-linear-gradient(left,#000,#ccc,#000);background-image:-o-linear-gradient(left,#000,#ccc,#000);">
+</div>
+<article>
+<div class="montage">
+EOF
+
+find . -depth 2 -name "index.html" -mmin +2 | sed 's/ /%20/g' | while read line; do echo "<div class="grid-item"><a href=\"$line\">"; done >> link.bak
+find . -depth 2 -name "thumb.webp" -mmin +2 | sed 's/ /%20/g' | while read line; do echo "<img class="thumbnail" src=\"$line\"></a></div>"; done >> img.bak
+paste -d \\n link.bak img.bak >> index.html
+> link.bak
+> img.bak
+
+cat >> index.html<< EOF
+</div>
+</article>
+</body>
+</html>
+EOF
+
+sed -i "" "s/GbnumbG/$count/" index.html
+}
+
+[[ "$1" == "help" ]] && manual && exit 1
+[[ "$1" == "bulk" ]] && bulk && exit 1
+[[ "$1" == "library" ]] && library && exit 1
+
+echo "Building webpage..."
+pheader && echo "Printing Header..."
+plist && echo "Printing List..."
+pfooter && echo "Printing Footer..."
+addextra && echo "Adding extras..."
+echo "Generating thumbnail..." && magick *0001.jpg -resize 800x -quality 50 -define webp:lossless=false thumb.webp
+echo "DONE"

@@ -1,107 +1,110 @@
 # NIGHTSTAND
 ### A Minimalist Reader for Scanned Books (And More)
 
-## About
-
 Books are enjoyable---when they look right. I've used some
 pretty decent ePub and PDF apps, but something was always
 lacking in all the apps I tried for scanned books (usually
 in a jpeg or png format.)
 
-Well, I had enough. I wanted an app that could easily take a
-folder filled with images, and spit out a clean, easy to use
-webpage that can run on any device.
+Well, I had enough. I wanted to take a folder filled with images,
+and spit out a clean, easy to use webpage that can run on any device.
 
 Easily zoom in with the hidden settings on the top left
 corner, and choose between scroll or book layouts.
 
 Not only can you enjoy reading books, but you can share the
-experience on your own website. This tool would be useful
+experience on your own website. Host a local webserver and read
+your books across devices. This tool would be useful
 for webcomics, graphic novels, or any projects where you
-want to display a series of images in a book layout.
+want to display a series of images you can scroll through.
 
-### Useful for:
+### Use Cases:
 
-- Books
+- Books and Book Collections
 - Presentations/slideshows
-- Art
+- Art, Portfolios and Galleries
 - Comics
 - Photo collections
 - And more!
 
 ## Dependencies
 
-Most of the heavy-lifting under the hood is Vim scripting,
-Bash, and Javascript. Nightstand has only been tested on
-OSX/Unix, so other platforms may need some tweaking.
+Nightstand used to be a complicated mess, but now runs entirely
+on shell scripting. The only dependency is ImageMagick, which turns the first image into a thumbnail in webp format.
 
-Otherwise, the code structure is very simple and
-lightweight, so compatability shouldn't be a huge problem.
+Nightstand has only been tested on OSX/Unix, so other platforms
+may need some tweaking.
 
 ## Quickstart
 
-Unzip the repository and change directories
+### Installing
+
+Create a path for "nightstand" in your bashrc or bash profile. Personally, I have a folder that holds all of my scripts, and I use that folder as my path.
 
 ```
-cd ~/path/to/Nightstand/
+export PATH="$PATH:$HOME/.scripts"
 ```
+If you installed correctly, running ```nightstand help``` will show the options information.
 
-Copy or move your book folder to the ./book directory in
-Nightstand. Delete the Alice Sample folder. The files must all have the same naming scheme,
-and I reccomend numbering the files with added zeros to
-ensure the pages are compiled in the right order. Here's an
-example:
+### Setup
 
-```
-BookTitle_0001.jpg
-BookTitle_0002.jpg
-BookTitle_0003.jpg
-BookTitle_0004.jpg
-BookTitle_0005.jpg
-BookTitle_0006.jpg
-BookTitle_0007.jpg
-BookTitle_0008.jpg
-BookTitle_0009.jpg
-BookTitle_0010.jpg
-BookTitle_0011.jpg
-BookTitle_0012.jpg
-```
+First, you need to make sure your images are named and formatted correctly. I recomend using vim, with vimv or vim renamer to rename images in bulk.
 
-Only put one book folder in ./book at a time. If you want to
-switch between multiple books, you can use the ./library folder for
-easy storage.
+All images should be in .jpg format. The last 4 characters before the extension should be four digits. Nightstand uses the "0001" page for the thumbnail/book cover.
 
-The title of your image folder inside ./book will become the
-title of the HTML page. Make sure the folder doesn't have
-special characters or emojis, as that may disrupt
-compilation.
+Make sure the containing folder has the right name. Spaces are acceptable, but be careful when using special characters. The name of your folder will be used as the title for the html page.
 
-In the Nightstand folder run:
+Everything together, your directory should look something like this:
 
 ```
-sh build.sh
+/The Title of Your Book
+    BookTitle_0001.jpg
+    BookTitle_0002.jpg
+    BookTitle_0003.jpg
+    BookTitle_0004.jpg
+    BookTitle_0005.jpg
+    BookTitle_0006.jpg
+    BookTitle_0007.jpg
+    BookTitle_0008.jpg
+    BookTitle_0009.jpg
+    BookTitle_0010.jpg
+    BookTitle_0011.jpg
+    BookTitle_0012.jpg
 ```
 
-Within seconds you should have a fully functioning
-Nightstand page. Open up index.html in your browser of
-choice, and enjoy!
+It should also be noted, that the finished html page will look best when all the images are the same size. Images with varying aspect ratios will look pretty ugly.
+
+### Commands
+
+Make sure you've changed to the right directory. ```cd /path/to/my/book/``` Then you can run ```nightstand [option]```
+
+You can run nightstand on individual book folders, or use the other options to set up multiple folders at once.
+
+```
+nightstand
+```
+
+If you don't enter any option, nightstand will take images in the current directory and build a single index.html file.
+
+```
+nightstand bulk
+```
+
+The bulk option will go into the subdirectories of the current folder and build a nightstand page in each. This is useful for setting up a whole library without manually running the script in a ton of folders.
+
+```
+nightstand library
+```
+
+The library option looks in subdirectories for index.html files and thumbnails, and builds a library webpage in the current directory so you can browse through your whole collection.
+
 
 ## Publishing to the Web
 
 Once your webpage is compiled, you can modify the results to
 your heart's content.
 
-The only necessary files for web publishing are:
-
-```
-index.html
-style.css
-features.js
-./book
-```
-
-Simply upload these files to your web host, and you're all
-set.
+Simply upload your folder(s) to your webhost, and you're all set.
 
 Be warned: depending on how large your images are, and how
 many pages you're compiling, the resulting webpage may be
@@ -117,5 +120,4 @@ experience.
 - Presentation mode (flip through pages one or two at a time)
 - Adjust page brightness and contrast
 - Page grid view
-- Library browser (multi-book support and browsing between books)
 - Support for markdown/html eBooks

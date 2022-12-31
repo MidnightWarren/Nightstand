@@ -77,7 +77,7 @@ It should also be noted, that the finished html page will look best when all the
 
 Make sure you've changed to the right directory. ```cd /path/to/my/book/``` Then you can run ```nightstand [option]```
 
-You can run nightstand on individual book folders, or use the other options to set up multiple folders at once.
+You can run nightstand on individual book folders, or use the other options to set up multiple folders at once. Running these commands multiple times will override existing index.html files and thumbnails.
 
 ```
 nightstand

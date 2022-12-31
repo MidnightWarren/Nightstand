@@ -3,8 +3,7 @@
 
 Books are enjoyable---when they look right. I've used some
 pretty decent ePub and PDF apps, but something was always
-lacking in all the apps I tried for scanned books (usually
-in a jpeg or png format.)
+lacking in all the apps I tried for scanned books (jpeg or png format.)
 
 Well, I had enough. I wanted to take a folder filled with images,
 and spit out a clean, easy to use webpage that can run on any device.

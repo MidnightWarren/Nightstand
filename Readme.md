@@ -1,6 +1,8 @@
 # NIGHTSTAND
 ### A Minimalist Reader for Scanned Books (And More)
 
+![](example.png)
+
 Books are enjoyable---when they look right. I've used some
 pretty decent ePub and PDF apps, but something was always
 lacking in all the apps I tried for scanned books (jpeg or png format.)

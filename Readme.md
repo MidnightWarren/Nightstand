@@ -19,6 +19,9 @@ your books across devices. This tool would be useful
 for webcomics, graphic novels, or any projects where you
 want to display a series of images you can scroll through.
 
+You can also build a searchable library to browse through a large
+catalog.
+
 ### Use Cases:
 
 - Books and Book Collections
@@ -116,6 +119,8 @@ experience.
 
 ## Features for Future Versions
 
+- Improved search
+- Metadata options, tagging, and book info
 - Click and drag to scroll over images (mobile and desktop)
 - Custom background images(?)
 - Presentation mode (flip through pages one or two at a time)

@@ -3,8 +3,17 @@
 # Nightstand
 # Public Domain -  2022 Christopher Warren
 # midnightauthor.com
-
-# TEXT COLORS
+#COLOR CODES
+#Black        0;30     Dark Gray     1;30
+#Red          0;31     Light Red     1;31
+#Green        0;32     Light Green   1;32
+#Brown/Orange 0;33     Yellow        1;33
+#Blue         0;34     Light Blue    1;34
+#Purple       0;35     Light Purple  1;35
+#Cyan         0;36     Light Cyan    1;36
+#Light Gray   0;37     White         1;37
+#    .---------- constant part!
+#    vvvv vvvv-- the code from above
 RED='\033[0;31m'
 GRN='\033[0;32m'
 BLU='\033[0;34m'
@@ -111,6 +120,35 @@ background-color:black;
 color:white;
 }
 
+.search {
+display; block;
+width:60%;
+margin: 0 auto;
+margin-bottom: 50px;
+}
+
+#search {
+border: 1px solid grey;
+border-radius: 5px;
+height: 50px;
+width: 80%;
+padding: 2px 23px 2px 30px;
+outline: 0;
+background-color: black;
+color: white;
+}
+#clear-search {
+border: 1px solid grey;
+border-radius: 5px;
+height: 50px;
+width: 15%;
+padding: 3px;
+text-align: center;
+outline: 0;
+background-color: black;
+color: white;
+}
+
 article {
 width: 80%;
 margin: 0 auto;
@@ -170,11 +208,64 @@ display: block;
 <h4 style="text-align:center;">· GbnumbG books ·</h4>
 <hr style="border:0;height:1px;background:#ccc;background-image:-webkit-linear-gradient(left,#000,#ccc,#000);background-image:-moz-linear-gradient(left,#000,#ccc,#000);background-image:-ms-linear-gradient(left,#000,#ccc,#000);background-image:-o-linear-gradient(left,#000,#ccc,#000);">
 </div>
+
+<div class="search js-only">
+  <input type="text" id="search" placeholder="Search Books...">
+  <button id="clear-search">X</button>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  for (e of document.getElementsByClassName("js-only")) {
+    e.classList.remove("js-only");
+  }
+
+  const books = document.querySelectorAll("#montagebox div");
+  const search = document.getElementById("search");
+  const clearSearch = document.getElementById("clear-search");
+  const readlist = document.getElementById("montagebox");
+
+  search.addEventListener("input", () => {
+    // grab search input value
+    const searchText = search.value.toLowerCase().trim().normalize('NFD').replace(/\p{Diacritic}/gu, "");
+    const searchTerms = searchText.split(" ");
+    const hasFilter = searchText.length > 0;
+
+    readlist.classList.toggle("list-searched", hasFilter);
+
+    // for each recipe hide all but matched
+    books.forEach(book => {
+      const searchString = \`\${book.textContent} \${book.dataset.tags}\`.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "");
+      const isMatch = searchTerms.every(term => searchString.includes(term));
+
+      if(!isMatch)
+{
+      book.style="display:none;";
+}
+      if(isMatch)
+{
+      book.style="";
+}
+      book.classList.toggle("matched-book", hasFilter && isMatch);
+    })
+  })
+
+  clearSearch.addEventListener("click", () => {
+    search.value = "";
+    books.forEach(book => {
+      book.style="";
+      book.classList.remove("matched-book");
+    })
+
+    readlist.classList.remove("list-searched");
+  })
+})
+</script>
+
 <article>
-<div class="montage">
+<div id="montagebox" class="montage">
 EOF
 
-find . -depth 2 -name "index.html" -mmin +2 | sed 's/ /%20/g' | while read line; do echo "<div class=\"grid-item\"><a href=\"$line\">"; done >> link.bak
+find . -depth 2 -name "index.html" -mmin +2 | sed 's/ /%20/g' | while read line; do echo "<div class=\"grid-item\" data-tags=\"$line\"><a href=\"$line\">"; done >> link.bak
 find . -depth 2 -name "thumb.webp" -mmin +2 | sed 's/ /%20/g' | while read line; do echo "<img class=\"thumbnail\" src=\"$line\"></a></div>"; done >> img.bak
 paste -d \\n link.bak img.bak >> index.html
 > link.bak
@@ -188,6 +279,12 @@ cat >> index.html<< EOF
 EOF
 
 sed -i "" "s/GbnumbG/$count/" index.html
+
+# vim -E -s index.html << EOF
+# :let @l="02f=llxxvf/hygvf hhp02f=llvf hh:s/\\%V%20/ /g"
+# :g/data-tags/norm @l
+# EOF
+
 }
 
 [[ "$1" == "help" ]] && manual && exit 1

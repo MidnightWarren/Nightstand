@@ -174,8 +174,8 @@ display: block;
 <div class="montage">
 EOF
 
-find . -depth 2 -name "index.html" -mmin +2 | sed 's/ /%20/g' | while read line; do echo "<div class="grid-item"><a href=\"$line\">"; done >> link.bak
-find . -depth 2 -name "thumb.webp" -mmin +2 | sed 's/ /%20/g' | while read line; do echo "<img class="thumbnail" src=\"$line\"></a></div>"; done >> img.bak
+find . -depth 2 -name "index.html" -mmin +2 | sed 's/ /%20/g' | while read line; do echo "<div class=\"grid-item\"><a href=\"$line\">"; done >> link.bak
+find . -depth 2 -name "thumb.webp" -mmin +2 | sed 's/ /%20/g' | while read line; do echo "<img class=\"thumbnail\" src=\"$line\"></a></div>"; done >> img.bak
 paste -d \\n link.bak img.bak >> index.html
 > link.bak
 > img.bak

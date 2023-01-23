@@ -56,12 +56,12 @@ First, you need to make sure your images are named and formatted correctly. I re
 
 All images should be in .jpg format. The last 4 characters before the extension should be four digits. Nightstand uses the "0001" page for the thumbnail/book cover.
 
-Make sure the containing folder has the right name. Spaces are acceptable, but be careful when using special characters. The name of your folder will be used as the title for the html page.
+Make sure the containing folder has the right name. Spaces are acceptable, but be careful when using special characters. The name of your folder will be used as the title for the html page. For automatic metadata scraping, the reccomended directory name is  ```Book Title -- Author Name```.
 
 Everything together, your directory should look something like this:
 
 ```
-/The Title of Your Book
+/The Title of Your Book -- Author
     BookTitle_0001.jpg
     BookTitle_0002.jpg
     BookTitle_0003.jpg
@@ -91,6 +91,17 @@ nightstand
 If you don't enter any option, nightstand will take images in the current directory and build a single index.html file.
 
 ```
+nightstand -m
+```
+
+Turns on automatic metadata scraping using Goodreads. The -m flag also works in bulk mode.
+
+```
+nightstand -im [URL]
+```
+Generates a meta.txt file from a Goodreads url. This is useful in case the automatic scraping fails.
+
+```
 nightstand bulk
 ```
 
@@ -102,6 +113,11 @@ nightstand library
 
 The library option looks in subdirectories for index.html files and thumbnails, and builds a library webpage in the current directory so you can browse through your whole collection.
 
+```
+nightstand elib
+```
+
+eLib is still an experimental feature. It takes a directory full of HTML ebook files and converts them into a Nightstand library. This is great to use with Pandoc, so you can convert ePub files into standalone HTML, and Nightstand builds the library using the first base 64 image as a thumbnail. I hope to streamline this feature in future updates.
 
 ## Publishing to the Web
 
@@ -119,11 +135,11 @@ experience.
 
 ## Features for Future Versions
 
-- Improved search
+- ~~Improved search~~
 - Metadata options, tagging, and book info
 - Click and drag to scroll over images (mobile and desktop)
 - Custom background images(?)
 - Presentation mode (flip through pages one or two at a time)
 - Adjust page brightness and contrast
 - Page grid view
-- Support for markdown/html eBooks
+- ~~Support for markdown/html eBooks~~

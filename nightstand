@@ -25,6 +25,8 @@ BLD='\033[1m'
 UND='\033[4m'
 NO='\033[0m' # No Color
 
+metaurl=""
+
 function manual {
 printf "${PRP}Nightstand Help:${NO}\n"
 printf "Usage: nightstand [option]\n"
@@ -32,6 +34,10 @@ printf "${RED}Make sure you're in the right directory before running.${NO}\n"
 printf "    OPTIONS:\n"
 printf "${YLW}nothing${NO}\n"
 printf "${CYN}If you don't enter any option, \nnightstand will take images in the \ncurrent directory and build\na single index.html file.${NO}\n"
+printf "${YLW}-m${NO}\n"
+printf "${CYN}The -m flag turns on automatic metadata scraping\nfrom Goodreads. Only works in default and bulk modes.${NO}\n"
+printf "${YLW}-im${NO} usage: nightstand -im [URL]\n"
+printf "${CYN}The -im flag creates a meta.txt file\n from a Goodreads url. Useful in case the\nautomatic metadata search fails.${NO}\n"
 printf "${YLW}bulk${NO}\n"
 printf "${CYN}The bulk option will go into the subdirectories \nof the current folder and build a \nnightstand page in each. This is useful for setting up \na whole library.${NO}\n"
 printf "${YLW}library${NO}\n"
@@ -82,25 +88,62 @@ EOF
 }
 
 function addextra {
-# sed -i "" '
-# /<img src/a\
-# <div class="pagecontainer">\
-# ' index.html
-
 printf '%s\n' '23 insert' '<div class="pagecontainer">' . x | ex index.html
 printf '%s\n' 'set ignorecase' '$+?img src?i' '</div>' . x | ex index.html
 
 sed -i "" "s/b00k/$title/" index.html
 }
 
+function addmeta {
+searchsafe=$( echo "$PWD" | sed -e 's/^.*[/]//' -e "s/'/%27/g" -e "s/ /\+/g")
+searchplain=$( echo "$PWD" | sed -e 's/^.*[/]//')
+result=$(curl -LsS "https://www.goodreads.com/search?q=$searchsafe" | grep -A7 "itemtype=\"http://schema\.org/Book\"" | grep "href=" | head -1 | sed -e 's@.*/@@' -e 's|\(.*\)?.*|\1|')
+
+curl -s -LsS "https://www.goodreads.com/book/show/$result" > tmp_file
+  
+firstpub=$(cat tmp_file | grep "(first published" | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]$//")
+date=$(cat tmp_file | grep -A1 "Published$" | tail -1 | grep -o '\d\d\d\d')
+title=$(cat tmp_file | grep -A1 "id=\"bookTitle\"" | tail -1 | sed -e 's/<[^>]*>//g' -e 's/^[[:space:]]*//')
+author=$(cat tmp_file | grep "class=\"authorName\"" | sed -e 's/<[^>]*>//g' | tr '\n' ' ' | sed -e 's/ (Goodreads Author)//g' -e "s/ * / /g" )
+isbn=$(cat tmp_file | grep "property='books:isbn'" | head -1 | grep -o "\d*\d")
+desc=$(cat tmp_file | grep -A7 "id=\"descriptionContainer\"" | grep "id=\"freeText\d\d*\"" | head -1 | sed -e 's/<[^>]*>//g' -e 's/^[[:space:]]*//' -e 's/^/"/' -e 's/$/"/')
+
+echo "Title: $title" > meta.txt
+echo "Author(s): $author" >> meta.txt
+[[ -z "$firstpub" ]] && echo "Date: $date" >> meta.txt || echo "Date: $firstpub, $date" >> meta.txt
+echo "ISBN: $isbn" >> meta.txt
+[[ -z "$desc" ]] && echo "Description: N/A" >> meta.txt || echo "Description: $desc" >> meta.txt
+rm tmp_file
+}
+
+function importmeta {
+[[ -z "$metaurl" ]] && echo "Please include a Goodreads URL to scrape metadata" && exit 1 || echo "Collecting metadata..."
+curl -s -LsS "$metaurl" > tmp_file
+  
+firstpub=$(cat tmp_file | grep "(first published" | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]$//")
+date=$(cat tmp_file | grep -A1 "Published$" | tail -1 | grep -o '\d\d\d\d')
+title=$(cat tmp_file | grep -A1 "id=\"bookTitle\"" | tail -1 | sed -e 's/<[^>]*>//g' -e 's/^[[:space:]]*//')
+author=$(cat tmp_file | grep "class=\"authorName\"" | sed -e 's/<[^>]*>//g' | tr '\n' ' ' | sed -e 's/ (Goodreads Author)//g' -e "s/ * / /g" )
+isbn=$(cat tmp_file | grep "property='books:isbn'" | head -1 | grep -o "\d*\d")
+desc=$(cat tmp_file | grep -A7 "id=\"descriptionContainer\"" | grep "id=\"freeText\d\d*\"" | head -1 | sed -e 's/<[^>]*>//g' -e 's/^[[:space:]]*//' -e 's/^/"/' -e 's/$/"/')
+
+echo "Title: $title" > meta.txt
+echo "Author(s): $author" >> meta.txt
+[[ -z "$firstpub" ]] && echo "Date: $date" >> meta.txt || echo "Date: $firstpub, $date" >> meta.txt
+echo "ISBN: $isbn" >> meta.txt
+[[ -z "$desc" ]] && echo "Description: N/A" >> meta.txt || echo "Description: $desc" >> meta.txt
+rm tmp_file
+}
+
 function bulk {
 for direcs in */; do
-cd "./$direcs" && nightstand && cd ../
+[[ "$2" == "-m" ]] && cd "./$direcs" && nightstand -m && cd ../
+[[ "$2" != "-m" ]] && cd "./$direcs" && nightstand && cd ../
 done
 }
 
 function library {
-count=$(find . -depth 2 -name "index.html" -mmin +2 | wc -l )
+count=$(find . -depth 2 -name "index.html" -mmin +2 | wc -l | grep -o "\w\d.*")
 
 cat > index.html<< EOF
 <!DOCTYPE html>
@@ -287,14 +330,210 @@ sed -i "" "s/GbnumbG/$count/" index.html
 
 }
 
+function elib {
+count=$(ls *.html | wc -l | grep -o "\w\d.*")
+
+cat > index.html<< EOF
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>📚 Library - Ebooks</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+background-color:black;
+color:white;
+}
+
+.search {
+display; block;
+width:60%;
+margin: 0 auto;
+margin-bottom: 50px;
+}
+
+#search {
+border: 1px solid grey;
+border-radius: 5px;
+height: 50px;
+width: 80%;
+padding: 2px 23px 2px 30px;
+outline: 0;
+background-color: black;
+color: white;
+}
+#clear-search {
+border: 1px solid grey;
+border-radius: 5px;
+height: 50px;
+width: 15%;
+padding: 3px;
+text-align: center;
+outline: 0;
+background-color: black;
+color: white;
+}
+
+article {
+width: 80%;
+margin: 0 auto;
+display: block;
+}
+
+.grid-item img {
+  width: 100%;
+}
+
+.montage {
+	column-count: 8;
+	column-gap: 16px;
+}
+
+.montage .grid-item {
+  display: inline-block;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+@media (max-width: 1700px) {
+  .montage {
+    column-count: 6;
+  }
+}
+
+@media (max-width: 1300px) {
+  .montage {
+    column-count: 4;
+  }
+}
+
+@media (max-width: 1000px) {
+  .montage {
+    column-count: 3;
+  }
+}
+
+@media (max-width: 800px) {
+  .montage {
+    column-count: 2;
+  }
+}
+
+@media (max-width: 350px) {
+  .montage {
+    column-count: 1;
+  }
+}
+</style>
+</head>
+<body>
+	
+<div width="100%" style="display:block;margin-top:35px;margin-bottom:60px;">
+<h2 style="text-align:center;">🕯️ The Library 🕯️</h2>
+<h4 style="text-align:center;">· GbnumbG books ·</h4>
+<hr style="border:0;height:1px;background:#ccc;background-image:-webkit-linear-gradient(left,#000,#ccc,#000);background-image:-moz-linear-gradient(left,#000,#ccc,#000);background-image:-ms-linear-gradient(left,#000,#ccc,#000);background-image:-o-linear-gradient(left,#000,#ccc,#000);">
+</div>
+
+<div class="search js-only">
+  <input type="text" id="search" placeholder="Search Books...">
+  <button id="clear-search">X</button>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  for (e of document.getElementsByClassName("js-only")) {
+    e.classList.remove("js-only");
+  }
+
+  const books = document.querySelectorAll("#montagebox div");
+  const search = document.getElementById("search");
+  const clearSearch = document.getElementById("clear-search");
+  const readlist = document.getElementById("montagebox");
+
+  search.addEventListener("input", () => {
+    // grab search input value
+    const searchText = search.value.toLowerCase().trim().normalize('NFD').replace(/\p{Diacritic}/gu, "");
+    const searchTerms = searchText.split(" ");
+    const hasFilter = searchText.length > 0;
+
+    readlist.classList.toggle("list-searched", hasFilter);
+
+    // for each recipe hide all but matched
+    books.forEach(book => {
+      const searchString = \`\${book.textContent} \${book.dataset.tags}\`.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, "");
+      const isMatch = searchTerms.every(term => searchString.includes(term));
+
+      if(!isMatch)
+{
+      book.style="display:none;";
+}
+      if(isMatch)
+{
+      book.style="";
+}
+      book.classList.toggle("matched-book", hasFilter && isMatch);
+    })
+  })
+
+  clearSearch.addEventListener("click", () => {
+    search.value = "";
+    books.forEach(book => {
+      book.style="";
+      book.classList.remove("matched-book");
+    })
+
+    readlist.classList.remove("list-searched");
+  })
+})
+</script>
+
+<article>
+<div id="montagebox" class="montage">
+EOF
+
+bnum="0"
+
+for i in *.html; do
+bnum=$(($bnum+1))
+printf "\rBuilding $bnum/$count"
+etitle=$(grep 'class="title"' "$i"| head -1 | sed -e 's/<[^>]*>//g')
+eauthor=$(grep 'name="author"' "$i"| head -1 | grep -o "content=\".*\"" | sed -e 's/content="//' -e 's/"$//')
+elink=$(echo "$i" | sed 's/ /%20/g')
+ecover=$(grep -o 'src="data:image.*\/>' "$i" | head -1)
+echo "<div class=\"grid-item\" data-tags=\"$etitle $eauthor\">" >> index.html
+echo "<a href=\"$elink\">" >> index.html
+echo "<img class="thumbnail" $ecover" >> index.html
+echo "</a></div>" >> index.html
+done
+printf "\n${RED}DONE!${NO}\n"
+
+cat >> index.html<< EOF
+</div>
+</article>
+</body>
+</html>
+EOF
+
+sed -i "" "s/GbnumbG/$count/" index.html
+}
+
 [[ "$1" == "help" ]] && manual && exit 1
+[[ "$1" == "-im" ]] && metaurl="$2" && importmeta && exit 1
 [[ "$1" == "bulk" ]] && bulk && exit 1
 [[ "$1" == "library" ]] && library && exit 1
+[[ "$1" == "elib" ]] && elib && exit 1
 
-echo "Building webpage..."
-pheader && echo "Printing Header..."
-plist && echo "Printing List..."
-pfooter && echo "Printing Footer..."
-addextra && echo "Adding extras..."
+buildingtitle=$( echo "$PWD" | sed -e 's/^.*[/]//')
+echo "Building webpage for $buildingtitle..."
+echo "Printing Header..." && pheader
+echo "Printing List..." && plist
+echo "Printing Footer..." && pfooter
+echo "Adding extras..." && addextra
 echo "Generating thumbnail..." && magick *0001.jpg -resize 800x -quality 50 -define webp:lossless=false thumb.webp
+[[ "$1" == "-m" ]] && echo "Adding metadata..." && addmeta
 echo "DONE"
